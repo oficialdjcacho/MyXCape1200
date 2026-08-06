@@ -1,0 +1,64 @@
+.brandWordmark {
+  color: #fff;
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.brandText {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #111;
+}
+
+.loginCard .brandText {
+  filter: none;
+  color: #111;
+}
+
+.consentCheck {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.consentCheck input {
+  width: auto;
+  margin: 2px 0;
+}
+
+.mapPrivacy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 18px 0;
+}
+
+.mapPrivacy p {
+  margin: 0;
+}
+.mapPrivacy.mapEnabled {
+  padding: 10px 14px;
+  box-shadow: none;
+}
+.mapPrivacy.mapEnabled p {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .mapPrivacy {
+    display: grid;
+  }
+  .brandWordmark {
+    font-size: 16px;
+  }
+}

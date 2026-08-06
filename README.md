@@ -19,6 +19,8 @@ The generated encryption secret is stored in `instance/flask-secret.txt`, which 
 
 State-changing API calls require a CSRF token bound to the encrypted browser state. Cookies are `SameSite=Strict` and `HttpOnly`; `Secure` is enabled automatically when Flask sees HTTPS (including `X-Forwarded-Proto` from a trusted reverse proxy). Do not expose the development server directly to the Internet. Remote-action audit logs contain hashed operation references and command results, never authorization tokens or passwords.
 
+Remote engine commands additionally require a per-browser safety PIN, ownership is revalidated before every command, and abuse/duplicate protections are applied. External map tiles are disabled until the user opts in. See [SECURITY.md](SECURITY.md) before inviting third parties.
+
 Authenticated requests reproduce Ride MO's headers: raw token in `Authorization`, `API-TIMESTAMP`, `API-DEVICE: Android`, and the matching `API-SIGN` MD5 signature.
 
 ## Despliegue en Render
@@ -30,4 +32,4 @@ El archivo `render.yaml` define un Web Service gratuito con Gunicorn, HTTPS gest
 3. Render detectara `render.yaml` y creara el servicio `myxcape1200`.
 4. Comprueba que `RIDE_MO_LOCAL_SECRET` aparece en **Environment** y no cambies su valor despues de que haya usuarios conectados: rotarlo cierra de forma segura todas las sesiones.
 
-No configures `RIDE_MO_BASE_URL` en produccion: cada cuenta debe descubrir su nodo regional. El plan gratuito de Render suspende el servicio cuando queda inactivo, por lo que la primera visita posterior puede tardar en responder.
+No configures `RIDE_MO_BASE_URL` en produccion: cada cuenta debe descubrir su nodo regional. Mantén `OFFICIAL_ASSETS_ENABLED=false` salvo que dispongas de autorización para mostrar imágenes oficiales. El plan gratuito de Render suspende el servicio cuando queda inactivo y se considera apto únicamente para una beta limitada, no para controles remotos de disponibilidad predecible.

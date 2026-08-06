@@ -6,6 +6,7 @@ import secrets
 import threading
 import time
 import zlib
+from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -27,6 +28,9 @@ REMOTE_LOG_FILE = Path(app.instance_path) / "remote-actions.log"
 AUTH_COOKIE = "ride_mo_auth"
 AUTH_COOKIE_MAX_AGE = int(os.getenv("RIDE_MO_COOKIE_MAX_AGE", str(30 * 24 * 60 * 60)))
 remote_log_lock = threading.Lock()
+rate_lock = threading.Lock()
+rate_buckets: dict[tuple[str, str], deque[float]] = defaultdict(deque)
+remote_inflight: dict[str, float] = {}
 
 
 def local_secret() -> str:
@@ -62,6 +66,11 @@ class RideSession:
     base_url: str = ""
     node: dict[str, Any] = field(default_factory=dict)
     csrf: str = ""
+    safety_pin_hash: str = ""
+    safety_pin_salt: str = ""
+    pin_failures: int = 0
+    pin_locked_until: float = 0
+    privacy_accepted_at: int = 0
     command_records: set[str] = field(default_factory=set)
     command_meta: dict[str, dict[str, str]] = field(default_factory=dict)
     lock: threading.Lock = field(default_factory=threading.Lock)
@@ -80,6 +89,11 @@ def state_payload(state: RideSession) -> dict[str, Any]:
                  ("nodeKey", "nodeName", "regionName", "countryName", "apiEndPoint")
                  if state.node.get(key) is not None},
         "csrf": getattr(state, "csrf", ""),
+        "pinHash": state.safety_pin_hash,
+        "pinSalt": state.safety_pin_salt,
+        "pinFailures": state.pin_failures,
+        "pinLockedUntil": state.pin_locked_until,
+        "privacyAcceptedAt": state.privacy_accepted_at,
         "commands": dict(recent_meta),
     }
 
@@ -107,6 +121,11 @@ def decode_state(value: str) -> RideSession:
         state.base_url = str(saved.get("baseUrl") or "")
         state.node = saved.get("node") if isinstance(saved.get("node"), dict) else {}
         state.csrf = str(saved.get("csrf") or "")
+        state.safety_pin_hash = str(saved.get("pinHash") or "")
+        state.safety_pin_salt = str(saved.get("pinSalt") or "")
+        state.pin_failures = int(saved.get("pinFailures") or 0)
+        state.pin_locked_until = float(saved.get("pinLockedUntil") or 0)
+        state.privacy_accepted_at = int(saved.get("privacyAcceptedAt") or 0)
         state.command_meta = saved.get("commands") if isinstance(saved.get("commands"), dict) else {}
         state.command_records = set(state.command_meta)
     except (InvalidToken, ValueError, TypeError, KeyError, zlib.error, json.JSONDecodeError):
@@ -140,8 +159,46 @@ def mark_session_dirty() -> None:
     g.ride_dirty = True
 
 
+def rate_identity(scope: str) -> str:
+    ip = request.remote_addr or "unknown"
+    if scope == "account":
+        token = local_session().token
+        return f"{ip}:{private_ref(token) if token else 'anonymous'}"
+    return ip
+
+
+def rate_limited(scope: str, limit: int, window: int):
+    """Small single-instance limiter; Render runs one Gunicorn worker for consistency."""
+    now = time.monotonic()
+    key = (scope, rate_identity("account" if scope == "remote" else "ip"))
+    with rate_lock:
+        bucket = rate_buckets[key]
+        while bucket and bucket[0] <= now - window:
+            bucket.popleft()
+        if len(bucket) >= limit:
+            retry = max(1, int(window - (now - bucket[0])))
+            response = jsonify(error="Demasiadas solicitudes. Espera antes de volver a intentarlo.")
+            response.status_code = 429
+            response.headers["Retry-After"] = str(retry)
+            return response
+        bucket.append(now)
+    return None
+
+
 @app.before_request
 def csrf_protection():
+    if request.endpoint == "captcha":
+        limited = rate_limited("captcha", 12, 600)
+        if limited:
+            return limited
+    elif request.endpoint == "login":
+        limited = rate_limited("login", 5, 900)
+        if limited:
+            return limited
+    elif request.endpoint in {"remote_action", "safety_pin"}:
+        limited = rate_limited("remote", 8, 60)
+        if limited:
+            return limited
     if request.method not in {"POST", "PUT", "PATCH", "DELETE"}:
         return None
     state = local_session()
@@ -191,10 +248,21 @@ def login_remote(state: RideSession, code: str, code_key: str) -> None:
 
 @app.after_request
 def security_headers(response):
-    response.headers["Cache-Control"] = "no-store"
+    if request.endpoint == "static" and response.status_code == 200:
+        response.headers["Cache-Control"] = "public, max-age=604800, immutable"
+    else:
+        response.headers["Cache-Control"] = "no-store"
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; "
+        "form-action 'self'; script-src 'self'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: https:; media-src 'self'; connect-src 'self'"
+    )
     if getattr(g, "clear_ride_cookie", False):
         response.delete_cookie(AUTH_COOKIE, path="/", secure=request.is_secure,
                                httponly=True, samesite="Strict")
@@ -213,7 +281,11 @@ def security_headers(response):
 
 @app.get("/")
 def index():
-    return render_template("index.html", base_url=BASE_URL_OVERRIDE or "nodo regional descubierto por Ride MO")
+    return render_template(
+        "index.html",
+        base_url=BASE_URL_OVERRIDE or "nodo regional descubierto por Ride MO",
+        official_assets=os.getenv("OFFICIAL_ASSETS_ENABLED", "false").lower() == "true",
+    )
 
 
 @app.get("/health")
@@ -259,6 +331,8 @@ def captcha():
 def login():
     body = request.get_json(force=True)
     state = local_session()
+    if body.get("acceptPrivacy") is not True:
+        return jsonify(error="Debes aceptar la política de privacidad y las condiciones de uso"), 400
     with state.lock:
         state.email = str(body.get("email", "")).strip()
         state.password = str(body.get("password", ""))
@@ -268,6 +342,10 @@ def login():
             login_remote(state, str(body.get("code", "")), state.captcha_key)
             state.user = {key: state.user.get(key) for key in ("id", "nickName", "email")
                           if state.user.get(key) is not None}
+            state.privacy_accepted_at = int(time.time())
+            state.safety_pin_hash = state.safety_pin_salt = ""
+            state.pin_failures = 0
+            state.pin_locked_until = 0
             mark_session_dirty()
         except Exception as exc:
             state.token = ""
@@ -297,6 +375,7 @@ def session_status():
     mark_session_dirty()  # Renew the encrypted browser session on an explicit restore.
     return jsonify(authenticated=True,
                    csrf=state.csrf,
+                   safetyPinSet=bool(state.safety_pin_hash),
                    user={k: state.user.get(k) for k in ("id", "nickName", "email")},
                    vehicles=payload.get("data") or [])
 
@@ -309,6 +388,47 @@ def vehicles():
     except Exception as exc:
         return jsonify(error=str(exc)), 401
     return jsonify(vehicles=payload.get("data") or [])
+
+
+def pin_digest(pin: str, salt: str) -> str:
+    return hashlib.pbkdf2_hmac("sha256", pin.encode(), bytes.fromhex(salt), 200_000).hex()
+
+
+@app.post("/api/safety-pin")
+def safety_pin():
+    state = local_session()
+    if not state.token:
+        return jsonify(error="Inicia sesión antes de configurar el PIN"), 401
+    pin = str((request.get_json(silent=True) or {}).get("pin") or "")
+    if not pin.isdigit() or not 6 <= len(pin) <= 12:
+        return jsonify(error="El PIN debe contener entre 6 y 12 cifras"), 400
+    state.safety_pin_salt = secrets.token_hex(16)
+    state.safety_pin_hash = pin_digest(pin, state.safety_pin_salt)
+    state.pin_failures = 0
+    state.pin_locked_until = 0
+    mark_session_dirty()
+    return jsonify(ok=True, safetyPinSet=True)
+
+
+def verify_safety_pin(state: RideSession, pin: str) -> bool:
+    now = time.time()
+    if not state.safety_pin_hash or now < state.pin_locked_until:
+        return False
+    valid = secrets.compare_digest(pin_digest(pin, state.safety_pin_salt), state.safety_pin_hash)
+    if valid:
+        state.pin_failures = 0
+    else:
+        state.pin_failures += 1
+        if state.pin_failures >= 5:
+            state.pin_locked_until = now + 900
+            state.pin_failures = 0
+    mark_session_dirty()
+    return valid
+
+
+def owns_vehicle(vehicle_id: str) -> bool:
+    vehicles = call("GET", "api/vehicle/dashboard-list", auth=True, params={"nature": ""}).get("data") or []
+    return any(str(vehicle.get("id") or "") == vehicle_id for vehicle in vehicles)
 
 
 @app.get("/api/vehicles/<equipment_code>/location")
@@ -410,6 +530,21 @@ def remote_action(vehicle_id: str):
     if item_code not in SAFE_REMOTE_ACTIONS or value not in SAFE_REMOTE_ACTIONS[item_code]:
         return jsonify(error="Esta función todavía no está habilitada"), 403
     try:
+        if not owns_vehicle(vehicle_id):
+            return jsonify(error="La motocicleta no pertenece a la cuenta autenticada"), 403
+        if item_code == "kos":
+            state = local_session()
+            if not state.safety_pin_hash:
+                return jsonify(error="Configura primero un PIN de seguridad para el arranque remoto", safetyPinRequired=True), 428
+            if not verify_safety_pin(state, str(body.get("safetyPin") or "")):
+                message = "PIN temporalmente bloqueado" if time.time() < state.pin_locked_until else "PIN de seguridad incorrecto"
+                return jsonify(error=message, safetyPinRequired=True), 403
+        operation_key = f"{private_ref(local_session().token)}:{vehicle_id}:{item_code}"
+        with rate_lock:
+            previous = remote_inflight.get(operation_key, 0)
+            if time.monotonic() - previous < 5:
+                return jsonify(error="Ya hay una orden equivalente en curso. Espera antes de repetirla."), 409
+            remote_inflight[operation_key] = time.monotonic()
         controls = call("GET", f"api/vehicle/{vehicle_id}/remote-state/control", auth=True).get("data") or []
         remote_type = "setting" if item_code in REMOTE_SETTING_ACTIONS else "control"
         catalogue = (call("GET", f"api/vehicle/{vehicle_id}/remote-state/setting", auth=True).get("data") or []) if remote_type == "setting" else controls
@@ -551,6 +686,10 @@ def logout():
     state.user.clear()
     state.command_records.clear()
     state.command_meta.clear()
+    state.safety_pin_hash = state.safety_pin_salt = ""
+    state.pin_failures = 0
+    state.pin_locked_until = 0
+    state.privacy_accepted_at = 0
     g.clear_ride_cookie = True
     g.ride_dirty = False
     return jsonify(ok=True)
