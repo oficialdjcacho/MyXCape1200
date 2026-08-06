@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: myxcape1200
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 45 app:app
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.5
+      - key: RIDE_MO_LOCAL_SECRET
+        generateValue: true
+      - key: RIDE_MO_COOKIE_MAX_AGE
+        value: 2592000

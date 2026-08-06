@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Ride MO · Localizador local</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/trips.css">
+</head>
+<body>
+<div class="siteBackdrop" aria-hidden="true"><video id="siteVideo" class="siteVideo" autoplay muted loop playsinline webkit-playsinline preload="auto"><source src="/static/media/xcape-1200-hero.mp4" type="video/mp4"></video><div class="siteVeil"></div></div>
+<main>
+  <section id="login" class="loginExperience">
+    <header class="loginTopbar">
+      <a href="https://motomorini.eu/" target="_blank" rel="noopener noreferrer" aria-label="Sitio oficial de Moto Morini"><img src="https://motomorini.eu/wp-content/themes/motomorini/inc/assets/images/logo-claim-white.png" alt="Moto Morini"></a>
+      <label class="globalLanguage"><span>Idioma</span><select id="languageSelect" class="languageSelect" aria-label="Idioma de la aplicación"><option value="es">ES · Español</option><option value="en">EN · English</option><option value="it">IT · Italiano</option><option value="pt-PT">PT · Português</option><option value="de">DE · Deutsch</option><option value="fr">FR · Français</option><option value="pl">PL · Polski</option><option value="el">EL · Ελληνικά</option><option value="nl">NL · Nederlands</option><option value="zh-CN">ZH · 简体中文</option><option value="ms-MY">MS · Bahasa Melayu</option></select></label>
+    </header>
+    <div class="loginCard">
+      <img class="xcapeLogo" src="https://motomorini.eu/wp-content/uploads/2025/09/logo-per-sito_x-cape-1200.png" alt="X-CAPE 1200">
+      <p class="eyebrow">ACCESO A TU MOTO</p>
+      <h1>Ride MO Web</h1>
+      <p>Inicia sesión con tu cuenta de Ride MO. La contraseña no se almacena en este dispositivo.</p><span id="node" hidden>{{ base_url }}</span>
+      <form id="loginForm">
+        <label>Email<input id="email" type="email" autocomplete="username" required></label>
+        <label>Contraseña<input id="password" type="password" autocomplete="current-password" required></label>
+        <div id="captchaRow" class="captcha"><div id="captchaVisual"></div><input id="code" placeholder="Código"></div>
+        <button>Iniciar sesión</button><button type="button" class="quiet" id="reloadCaptcha">Otro código</button>
+      </form>
+      <p id="loginError" class="error"></p>
+      <p class="loginProjectNote">Proyecto independiente y no oficial.</p>
+    </div>
+  </section>
+  <section id="dashboard" hidden>
+    <header class="appHeader"><div class="appIdentity"><a href="https://motomorini.eu/" target="_blank" rel="noopener noreferrer"><img class="dashboardLogo" src="https://motomorini.eu/wp-content/themes/motomorini/inc/assets/images/logo-claim-white.png" alt="Moto Morini"></a><div><p class="eyebrow">MI MOTO</p><h1 id="bikeName">Mi moto</h1></div></div><div class="headerActions"><label class="dashboardLanguage"><span>Idioma</span><select id="dashboardLanguageSelect" class="languageSelect" aria-label="Idioma de la aplicación"><option value="es">ES</option><option value="en">EN</option><option value="it">IT</option><option value="pt-PT">PT</option><option value="de">DE</option><option value="fr">FR</option><option value="pl">PL</option><option value="el">EL</option><option value="nl">NL</option><option value="zh-CN">ZH</option><option value="ms-MY">MS</option></select></label><button id="refreshData">Actualizar</button><button id="logout" class="quiet">Cerrar sesión</button></div></header>
+    <div id="appShell" class="appShell">
+      <aside class="sideNav" aria-label="Secciones">
+        <p class="sideTitle">Panel de la moto</p>
+        <nav>
+          <button type="button" class="navItem active" data-page="resumen"><span>⌂</span>Resumen</button>
+          <button type="button" class="navItem" data-page="telemetria"><span>◉</span>Telemetría</button>
+          <button type="button" class="navItem" data-page="neumaticos"><span>◎</span>Neumáticos</button>
+          <button type="button" class="navItem" data-page="remoto"><span>⌁</span>Funciones remotas</button>
+          <button type="button" class="navItem" data-page="avisos"><span>⚠</span>Avisos de movimiento</button>
+          <button type="button" class="navItem" data-page="trayectos"><span>↝</span>Trayectos</button>
+          <button type="button" class="navItem" data-page="averias"><span>!</span>Averías</button>
+        </nav>
+        <button type="button" class="navLegal" id="openLegalNav">Aviso legal</button>
+      </aside>
+      <div class="pageContent">
+        <section class="appPage active" data-page-view="resumen">
+          <div class="pageHeading"><p class="eyebrow">VISIÓN GENERAL</p><h2>Resumen del vehículo</h2><p>Ubicación, estado y configuración asignada.</p></div>
+          <section id="bikeVisual" class="card bikeVisual" hidden><img id="bikePicture" alt="Imagen oficial de la motocicleta" referrerpolicy="no-referrer"><div><p class="eyebrow">CONFIGURACIÓN ASIGNADA AL VEHÍCULO</p><h2 id="bikeVariant">Variante</h2><p id="bikeVisualInfo"></p></div></section>
+          <div id="map"></div>
+          <div class="status card"><span><strong>Última posición conocida</strong><br><span id="address">Consultando…</span></span><span id="updated"></span></div>
+          <section class="card pageCard"><h2>Estado</h2><div id="overview" class="facts"></div></section>
+        </section>
+        <section class="appPage" data-page-view="telemetria"><div class="pageHeading"><p class="eyebrow">DATOS DEL VEHÍCULO</p><h2>Telemetría</h2><p>Información actualizada de la motocicleta.</p></div><section class="card pageCard"><div id="telemetry" class="facts">Consultando…</div></section></section>
+        <section class="appPage" data-page-view="neumaticos"><div class="pageHeading"><p class="eyebrow">TPMS</p><h2>Neumáticos</h2><p>Presión y temperatura de ambos neumáticos.</p></div><section class="card pageCard"><div id="tires" class="facts">Consultando…</div></section></section>
+        <section class="appPage" data-page-view="remoto"><div class="pageHeading"><p class="eyebrow">CONTROL REMOTO</p><h2>Funciones remotas</h2><p>Controla las funciones compatibles de tu motocicleta.</p></div><section class="card remotePanel"><div id="capabilities" class="remoteGroups">Consultando…</div><p class="safetyNote">Comprueba siempre el estado real de la motocicleta después de enviar una orden.</p></section></section>
+        <section class="appPage" data-page-view="avisos"><div class="pageHeading"><p class="eyebrow">SEGURIDAD</p><h2>Avisos de movimiento</h2><p>Historial de detecciones registradas por la alarma de la motocicleta.</p></div><section class="card pageCard"><div id="movementAlerts" class="movementAlerts" aria-live="polite">Consultando avisos…</div><div class="movementAlertActions"><button type="button" class="quiet" id="loadMoreAlerts" hidden>Cargar más</button></div><p class="safetyNote">La consulta no cambia el estado de lectura de los avisos en Ride MO.</p></section></section>
+        <section class="appPage" data-page-view="trayectos"><div class="pageHeading"><p class="eyebrow">HISTORIAL</p><h2>Últimos trayectos</h2><p>Recorridos, estadísticas y reproducción animada.</p></div><section class="card pageCard"><div id="trips" class="facts">Consultando…</div></section></section>
+        <section class="appPage" data-page-view="averias"><div class="pageHeading"><p class="eyebrow">DIAGNÓSTICO</p><h2>Averías</h2><p>Códigos y avisos comunicados por el vehículo.</p></div><section class="card pageCard"><div id="faults" class="facts">Consultando…</div></section></section>
+      </div>
+      <aside id="quickPanel" class="card metricPanel" aria-labelledby="metricPanelTitle">
+        <div class="metricPanelHead"><div><p class="eyebrow">DATOS RÁPIDOS</p><h2 id="metricPanelTitle">Mis indicadores</h2></div><button type="button" class="quiet metricEdit" id="editMetrics">Personalizar</button></div>
+        <div id="summaryMetrics" class="metricGrid" aria-live="polite"><p>Consultando telemetría…</p></div>
+      </aside>
+    </div>
+  </section>
+</main>
+<footer class="siteFooter">
+  <p><strong>Proyecto independiente y no oficial.</strong> No está afiliado, patrocinado, autorizado ni respaldado por Moto Morini.</p>
+  <p>Moto Morini, sus logotipos, modelos e imágenes son marcas o materiales de sus respectivos titulares y se muestran únicamente con fines identificativos e informativos.</p>
+  <button type="button" class="legalLink" id="openLegal">Aviso legal, privacidad y condiciones de uso</button>
+</footer>
+<dialog id="tripDialog">
+  <div class="dialogHead"><div><p class="eyebrow">DETALLE DEL TRAYECTO</p><h2 id="tripTitle">Recorrido</h2></div><button id="closeTrip" class="quiet">Cerrar</button></div>
+  <div id="tripMap"></div>
+  <div class="tripControls"><button id="playTrip">Reproducir de nuevo</button><strong id="tripLive">Preparando animación…</strong><span>Los marcadores señalan eventos comunicados por la moto.</span></div>
+  <div id="tripStats" class="facts"></div>
+</dialog>
+<dialog id="legalDialog" class="legalDialog">
+  <div class="dialogHead"><div><p class="eyebrow">INFORMACIÓN IMPORTANTE</p><h2>Aviso legal, privacidad y condiciones de uso</h2></div><button type="button" id="closeLegal" class="quiet">Cerrar</button></div>
+  <div class="legalText">
+    <section><h3>1. Naturaleza independiente</h3><p>Esta aplicación web es un proyecto privado, experimental e independiente para consultar datos y facilitar la interoperabilidad con una motocicleta propiedad del usuario. No es una aplicación oficial de Moto Morini y no existe afiliación, patrocinio, autorización, certificación ni respaldo por parte de Moto Morini S.r.l., sus distribuidores o empresas relacionadas.</p></section>
+    <section><h3>2. Marcas, logotipos e imágenes</h3><p>“Moto Morini”, sus emblemas, nombres de modelos y demás signos distintivos pertenecen a sus respectivos titulares. Su aparición tiene una finalidad exclusivamente descriptiva e identificativa y no pretende generar confusión sobre el origen del servicio.</p><p>El logotipo mostrado procede de <a href="https://commons.wikimedia.org/wiki/File:Moto_Morini_Logo_2023.png" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>, donde se clasifica como logotipo de texto de dominio público a efectos de copyright, sin perjuicio de los derechos de marca aplicables. Las imágenes de motocicletas se reciben desde los servicios de Moto Morini y son ilustrativas; pueden no representar exactamente el vehículo o su equipamiento.</p></section>
+    <section><h3>3. Uso autorizado</h3><p>Debe utilizarse únicamente con una cuenta y una motocicleta propias o para las que el usuario tenga autorización expresa. El usuario es responsable de cumplir la legislación, los contratos, las condiciones del servicio oficial y los derechos de terceros. La herramienta no debe emplearse para acceder, localizar o controlar vehículos ajenos ni para eludir medidas de seguridad.</p></section>
+    <section><h3>4. Funciones remotas y seguridad</h3><p>Las órdenes remotas pueden arrancar o apagar el motor y modificar equipamiento o ajustes de conducción. Antes de ejecutarlas, el usuario debe comprobar personalmente que la motocicleta está inmovilizada, estable, en punto muerto, en un lugar ventilado y seguro, sin personas, animales ni obstáculos próximos. Nunca deben utilizarse mientras se conduce ni como sustituto de los mandos, comprobaciones y procedimientos indicados en el manual oficial.</p><p>Las respuestas del servidor o de la T-Box pueden ser tardías, incorrectas o contradictorias. Una indicación de éxito no garantiza por sí sola la ejecución física. El usuario debe verificar siempre el estado real de la motocicleta.</p></section>
+    <section><h3>5. Exclusión de garantías</h3><p>El software se ofrece “tal cual”, sin garantías de disponibilidad, exactitud, compatibilidad, seguridad o adecuación a un propósito concreto. Las API, protocolos y servicios de terceros pueden cambiar o dejar de funcionar sin previo aviso. Esta herramienta no sustituye la aplicación oficial, el manual de usuario, el concesionario, el taller autorizado ni la asistencia de emergencia.</p></section>
+    <section><h3>6. Responsabilidad</h3><p>En la medida permitida por la legislación aplicable, el autor o mantenedor del proyecto no asume responsabilidad por daños personales o materiales, pérdida de datos, descarga de batería, inmovilización, cambios de configuración, uso indebido, fallos de conectividad o consecuencias derivadas de órdenes remotas. Nada de este aviso limita derechos irrenunciables reconocidos legalmente al consumidor.</p></section>
+    <section><h3>7. Privacidad y conexiones externas</h3><p>Las credenciales se transmiten al nodo regional utilizado por Ride MO únicamente para iniciar sesión. La contraseña no se almacena y se elimina de la memoria de la aplicación al finalizar cada intento. El token y el nodo regional se guardan cifrados en una cookie HttpOnly individual del navegador; no se escriben en una base de datos ni en un archivo de sesiones compartido del servidor. En cada consulta, el servidor procesa temporalmente ese token para comunicarse con Ride MO. Los registros técnicos no incluyen contraseñas, tokens ni cookies, pero los datos consultados pueden contener ubicación, telemetría y recorridos personales.</p><p>El navegador también puede conectarse a servicios externos para obtener mapas y recursos visuales, entre ellos OpenStreetMap, unpkg, Wikimedia Commons y servidores de imágenes de Moto Morini/Aliyun. Cada proveedor aplica sus propias condiciones y políticas. No publique registros o capturas sin revisar y censurar ubicación, bastidor, matrícula, identificadores y demás datos personales.</p></section>
+    <section><h3>8. Propiedad y fuentes oficiales</h3><p>El uso de esta herramienta no concede derechos sobre las marcas o materiales de Moto Morini. Para información oficial consulte el <a href="https://motomorini.eu/es/privacidad-y-aviso-legal/" target="_blank" rel="noopener noreferrer">aviso legal de Moto Morini</a>, la aplicación Ride MO, el manual de la motocicleta y la red oficial.</p></section>
+    <section><h3>9. Aceptación</h3><p>Al utilizar esta aplicación, el usuario declara comprender su carácter no oficial y experimental, y acepta actuar con autorización, prudencia y bajo su propia responsabilidad. Última actualización: 6 de agosto de 2026.</p></section>
+  </div>
+</dialog>
+<dialog id="metricDialog" class="metricDialog">
+  <div class="dialogHead"><div><p class="eyebrow">PANEL PERSONALIZABLE</p><h2>Elegir indicadores</h2></div><button type="button" id="closeMetrics" class="quiet">Cerrar</button></div>
+  <p>Selecciona hasta seis valores para mostrarlos en la pantalla Resumen.</p>
+  <div id="metricOptions" class="metricOptions"></div>
+  <div class="metricDialogActions"><span id="metricCount">0 de 6 seleccionados</span><button type="button" id="resetMetrics" class="quiet">Restaurar valores iniciales</button><button type="button" id="saveMetrics">Guardar panel</button></div>
+</dialog>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/static/i18n.js"></script>
+<script src="/static/app.js"></script>
+</body></html>
