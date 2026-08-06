@@ -18,6 +18,45 @@
       (code, i) => (packs[code][es] = values[i] || values[0] || es),
     );
   add(
+    "Marca compatible · referencia oficial",
+    "Compatible brand · official reference",
+    "Marchio compatibile · riferimento ufficiale",
+    "Marca compatível · referência oficial",
+    "Kompatible Marke · offizieller Verweis",
+    "Marque compatible · référence officielle",
+    "Zgodna marka · oficjalne odniesienie",
+    "Συμβατή μάρκα · επίσημη αναφορά",
+    "Compatibel merk · officiële referentie",
+    "兼容品牌 · 官方参考",
+    "Jenama serasi · rujukan rasmi",
+  );
+  add(
+    "Modelo compatible · logotipo de su titular",
+    "Compatible model · logo of its owner",
+    "Modello compatibile · logo del titolare",
+    "Modelo compatível · logótipo do titular",
+    "Kompatibles Modell · Logo des Markeninhabers",
+    "Modèle compatible · logo de son titulaire",
+    "Zgodny model · logo właściciela",
+    "Συμβατό μοντέλο · λογότυπο του δικαιούχου",
+    "Compatibel model · logo van de eigenaar",
+    "兼容车型 · 权利人徽标",
+    "Model serasi · logo pemiliknya",
+  );
+  add(
+    "Referencia de compatibilidad",
+    "Compatibility reference",
+    "Riferimento di compatibilità",
+    "Referência de compatibilidade",
+    "Kompatibilitätshinweis",
+    "Référence de compatibilité",
+    "Informacja o zgodności",
+    "Αναφορά συμβατότητας",
+    "Compatibiliteitsverwijzing",
+    "兼容性参考",
+    "Rujukan keserasian",
+  );
+  add(
     "Idioma",
     "Language",
     "Lingua",
