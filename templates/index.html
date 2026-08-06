@@ -12,12 +12,21 @@
   </head>
   <body data-official-assets="{{ 'true' if official_assets else 'false' }}">
     <div class="siteBackdrop" aria-hidden="true">
+      <video id="siteVideo" class="siteVideo" autoplay muted loop playsinline webkit-playsinline preload="metadata">
+        <source src="/static/media/xcape-1200-hero.mp4" type="video/mp4" />
+      </video>
       <div class="siteVeil"></div>
     </div>
     <main>
       <section id="login" class="loginExperience">
         <header class="loginTopbar">
-          <strong class="brandWordmark">MyXCape1200</strong>
+          <div class="brandLockup">
+            <strong class="brandWordmark">MyXCape1200</strong>
+            <a class="officialBrandReference" href="https://motomorini.eu/" target="_blank" rel="noopener noreferrer" aria-label="Moto Morini, sitio oficial">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Moto_Morini_Logo_2023.png" alt="Moto Morini" referrerpolicy="no-referrer" />
+              <span>Marca compatible · referencia oficial</span>
+            </a>
+          </div>
           <label class="globalLanguage"
             ><span>Idioma</span
             ><select
@@ -40,9 +49,10 @@
           >
         </header>
         <div class="loginCard">
-          <div class="xcapeLogo brandText" aria-label="MyXCape1200">
-            MY X-CAPE 1200
-          </div>
+          <a class="modelBrandReference" href="https://motomorini.eu/model/x-cape-1200/" target="_blank" rel="noopener noreferrer" aria-label="X-Cape 1200 en el sitio oficial de Moto Morini">
+            <img class="xcapeLogo" src="https://motomorini.eu/wp-content/uploads/2025/09/logo-per-sito_x-cape-1200.png" alt="X-Cape 1200" referrerpolicy="no-referrer" />
+            <span>Modelo compatible · logotipo de su titular</span>
+          </a>
           <p class="eyebrow">ACCESO A TU MOTO</p>
           <h1>Ride MO Web</h1>
           <p>
@@ -87,7 +97,13 @@
       <section id="dashboard" hidden>
         <header class="appHeader">
           <div class="appIdentity">
-            <strong class="brandWordmark">MyXCape1200</strong>
+            <div class="dashboardBrandLockup">
+              <strong class="brandWordmark">MyXCape1200</strong>
+              <a class="officialBrandReference" href="https://motomorini.eu/" target="_blank" rel="noopener noreferrer" aria-label="Moto Morini, sitio oficial">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Moto_Morini_Logo_2023.png" alt="Moto Morini" referrerpolicy="no-referrer" />
+                <span>Referencia de compatibilidad</span>
+              </a>
+            </div>
             <div>
               <p class="eyebrow">MI MOTO</p>
               <h1 id="bikeName">Mi moto</h1>
@@ -307,6 +323,13 @@
         de sus respectivos titulares y se muestran únicamente con fines
         identificativos e informativos.
       </p>
+      <p class="provisionalMediaNotice">
+        Vídeo promocional provisional: © Moto Morini, reproducido desde una copia de su
+        <a href="https://motomorini.eu/wp-content/uploads/2024/11/X-Cape-1200_official-video_website-1.mp4" target="_blank" rel="noopener noreferrer">publicación original</a>.
+        MyXCape1200 no reclama su autoría ni dispone actualmente de una licencia del titular;
+        se retirará o sustituirá a solicitud. Consulte el
+        <a href="https://motomorini.eu/es/privacidad-y-aviso-legal/" target="_blank" rel="noopener noreferrer">aviso legal de Moto Morini</a>.
+      </p>
       <button type="button" class="legalLink" id="openLegal">
         Aviso legal, privacidad y condiciones de uso
       </button>
@@ -367,6 +390,14 @@
             aplicables. Las imágenes de motocicletas se reciben desde los
             servicios de Moto Morini y son ilustrativas; pueden no representar
             exactamente el vehículo o su equipamiento.
+          </p>
+          <p>
+            El vídeo de fondo es una copia provisional del vídeo promocional
+            publicado por Moto Morini para la X-Cape 1200. MyXCape1200 no
+            reclama su autoría ni dispone actualmente de una licencia del
+            titular. Su inclusión es temporal mientras se obtiene material
+            alternativo autorizado, y se retirará o sustituirá si el titular lo
+            solicita.
           </p>
         </section>
         <section>

@@ -5,6 +5,63 @@
   text-transform: uppercase;
 }
 
+.brandLockup,
+.dashboardBrandLockup {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.officialBrandReference {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-left: 16px;
+  border-left: 1px solid #b79a5880;
+  color: #eee;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.officialBrandReference img {
+  width: 74px;
+  height: 34px;
+  object-fit: contain;
+  filter: grayscale(1) brightness(3);
+}
+
+.modelBrandReference {
+  display: block;
+  margin: 0 auto 12px;
+  color: #666;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.modelBrandReference .xcapeLogo {
+  margin-bottom: 2px;
+  filter: none;
+}
+
+.provisionalMediaNotice {
+  font-size: 10px;
+  opacity: 0.82;
+}
+
+.provisionalMediaNotice a {
+  color: #d7bd7b;
+}
+
+body:has(#login:not([hidden])) .siteFooter .provisionalMediaNotice {
+  display: none;
+}
+
 .brandText {
   display: flex;
   align-items: center;
@@ -60,5 +117,20 @@
   }
   .brandWordmark {
     font-size: 16px;
+  }
+  .officialBrandReference span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+  .officialBrandReference {
+    gap: 0;
+    padding-left: 10px;
+  }
+  .officialBrandReference img {
+    width: 54px;
+    height: 28px;
   }
 }
