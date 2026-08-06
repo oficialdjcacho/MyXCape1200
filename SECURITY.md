@@ -22,7 +22,7 @@ The in-memory rate limiter is intended for the single-worker deployment in `rend
 1. Obtain written permission or another valid legal basis for use of the Ride MO API and any Moto Morini material. The project disclaimer is not a substitute for permission or compliance with service terms.
 2. Use a paid service that does not sleep and has monitoring, incident alerts and predictable retention. Render Free is suitable only for a limited beta.
 3. Configure a private privacy/security contact and complete the controller/provider information for the operator's jurisdiction.
-4. Keep `OFFICIAL_ASSETS_ENABLED=false` unless the operator has permission for vehicle images returned by the service.
+4. Vehicle images returned by Ride MO are displayed only as secondary product-identification material; preserve the attribution and independent-project notice, and remove them if the rights holder requests it.
 5. Run the automated tests and review dependency alerts before each release.
 
 ## Reporting

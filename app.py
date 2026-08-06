@@ -284,7 +284,9 @@ def index():
     return render_template(
         "index.html",
         base_url=BASE_URL_OVERRIDE or "nodo regional descubierto por Ride MO",
-        official_assets=os.getenv("OFFICIAL_ASSETS_ENABLED", "false").lower() == "true",
+        # Product imagery is supplied by Ride MO for the vehicle linked to the
+        # authenticated account and is shown as secondary, attributed material.
+        official_assets=True,
     )
 
 

@@ -32,4 +32,4 @@ El archivo `render.yaml` define un Web Service gratuito con Gunicorn, HTTPS gest
 3. Render detectara `render.yaml` y creara el servicio `myxcape1200`.
 4. Comprueba que `RIDE_MO_LOCAL_SECRET` aparece en **Environment** y no cambies su valor despues de que haya usuarios conectados: rotarlo cierra de forma segura todas las sesiones.
 
-No configures `RIDE_MO_BASE_URL` en produccion: cada cuenta debe descubrir su nodo regional. Mantén `OFFICIAL_ASSETS_ENABLED=false` salvo que dispongas de autorización para mostrar imágenes oficiales. El plan gratuito de Render suspende el servicio cuando queda inactivo y se considera apto únicamente para una beta limitada, no para controles remotos de disponibilidad predecible.
+No configures `RIDE_MO_BASE_URL` en producción: cada cuenta debe descubrir su nodo regional. La interfaz muestra como material secundario la imagen de producto que Ride MO asigna al vehículo vinculado; conserva visibles la atribución y el aviso de independencia. El plan gratuito de Render suspende el servicio cuando queda inactivo y se considera apto únicamente para una beta limitada, no para controles remotos de disponibilidad predecible.
