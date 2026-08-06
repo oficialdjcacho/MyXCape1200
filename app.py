@@ -219,7 +219,8 @@ def index():
 @app.get("/health")
 def health():
     """Una comprobacion local que no contacta con Ride MO ni expone sesiones."""
-    return jsonify(status="ok")
+    commit = os.getenv("RENDER_GIT_COMMIT", "local")
+    return jsonify(status="ok", commit=commit[:7])
 
 
 def discover_node(state: RideSession) -> None:
