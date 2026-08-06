@@ -505,6 +505,7 @@ def trips(vehicle_id: str):
                     params={"vehicleId": vehicle_id, "pageNum": 1, "pageSize": 10}).get("data") or {}
     except Exception as exc:
         return jsonify(error=str(exc)), 400
+    return jsonify(trips=data)
 
 
 @app.get("/api/vehicles/<vehicle_id>/movement-alerts")
@@ -529,7 +530,6 @@ def movement_alerts(vehicle_id: str):
                        total=page.get("total") if isinstance(page, dict) else None, readOnly=True)
     except Exception as exc:
         return jsonify(error=str(exc)), 400
-    return jsonify(trips=data)
 
 
 @app.get("/api/trips/<trajectory_id>")
